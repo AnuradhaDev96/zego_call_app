@@ -15,7 +15,7 @@ class _UserCardState extends State<UserCard> {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
-      height: 150.0,
+      height: 75.0,
       margin: const EdgeInsets.only(bottom: 12.0, left: 20.0, right: 20.0),
       padding: const EdgeInsets.only(bottom: 15.0, left: 8.0,),
       decoration: BoxDecoration(
@@ -53,9 +53,9 @@ class _UserCardState extends State<UserCard> {
               fontSize: 18.0,
             ),
           ),
-          // const Spacer(),
+          const Spacer(),
           actionButton(isVideoCall: false),
-          // actionButton(),
+          actionButton(),
         ],
       ),
     );
@@ -70,6 +70,7 @@ class _UserCardState extends State<UserCard> {
             name: widget.userModel.name,
           )
         ],
-        // buttonSize: const Size(30.0, 30.0),
+        buttonSize: const Size(50.0, 50.0),
+        iconSize: const Size(35.0, 35.0),
       );
 }

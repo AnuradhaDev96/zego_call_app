@@ -97,4 +97,19 @@ class FirebaseService {
     return _auth.currentUser?.email == email;
   }
 
+  static void initializeZegoServiceIfUserLoggedIn() async {
+
+    if (_auth.currentUser?.email != null) {
+      var user = await currentUser;
+      await ZegoUIKitPrebuiltCallInvitationService().init(
+        appID: Statics.zegoAppId /*input your AppID*/,
+        appSign: Statics.zegoAppSign /*input your AppSign*/,
+        userID: user!.username,
+        userName: user.username,
+        plugins: [ZegoUIKitSignalingPlugin()],
+      );
+    }
+
+  }
+
 }

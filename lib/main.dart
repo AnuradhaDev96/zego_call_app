@@ -48,6 +48,7 @@ Future<void> main() async {
 
   final navigatorKey = GlobalKey<NavigatorState>();
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
+  FirebaseService.initializeZegoServiceIfUserLoggedIn();
 
   runApp(MyApp(navigatorKey: navigatorKey));
 }
@@ -64,6 +65,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3C8339))),
+
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
