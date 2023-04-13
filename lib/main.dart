@@ -1,39 +1,33 @@
-import 'dart:convert';
-
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:push_notifications_app/firebase_options.dart';
-import 'package:http/http.dart' as http;
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
-import 'local_notification_controller.dart';
 import 'message_handler.dart';
 import 'models/user_model.dart';
 import 'services/firebase_service.dart';
-import 'zego/call_invitation_page.dart';
 import 'zego/login_page.dart';
 import 'zego/user_card.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
-  AwesomeNotifications().initialize(null, [
-    NotificationChannel(
-      channelKey: "call_channel",
-      channelName: "Call Channel",
-      channelDescription: "Channel of calling",
-      defaultColor: Colors.brown,
-      ledColor: Colors.red,
-      importance: NotificationImportance.Max,
-      channelShowBadge: true,
-      locked: true,
-      defaultRingtoneType: DefaultRingtoneType.Ringtone,
-    )
-  ]);
+  // AwesomeNotifications().initialize(null, [
+  //   NotificationChannel(
+  //     channelKey: "call_channel",
+  //     channelName: "Call Channel",
+  //     channelDescription: "Channel of calling",
+  //     defaultColor: Colors.brown,
+  //     ledColor: Colors.red,
+  //     importance: NotificationImportance.Max,
+  //     channelShowBadge: true,
+  //     locked: true,
+  //     defaultRingtoneType: DefaultRingtoneType.Ringtone,
+  //   )
+  // ]);
 
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -52,13 +46,16 @@ Future<void> main() async {
   //   sound: true,
   // );
 
-  runApp(const MyApp());
+  final navigatorKey = GlobalKey<NavigatorState>();
+  ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
+
+  runApp(MyApp(navigatorKey: navigatorKey));
 }
 
 class MyApp extends StatelessWidget {
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> navigatorKey;
 
-  const MyApp({super.key});
+  MyApp({super.key, required this.navigatorKey});
 
   // This widget is the root of your application.
   @override

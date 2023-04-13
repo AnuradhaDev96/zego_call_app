@@ -1,6 +1,5 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 
-import 'main.dart';
 
 class LocalNotificationController {
   /// Use this method to detect when a new notification or a schedule is created
@@ -32,9 +31,9 @@ class LocalNotificationController {
     } else {
       print("clicked on notification");
       // Navigate into pages, avoiding to open the notification details page over another details page already opened
-      MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil('/notification-page',
-              (route) => (route.settings.name != '/notification-page') || route.isFirst,
-          arguments: receivedAction);
+      // MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil('/notification-page',
+      //         (route) => (route.settings.name != '/notification-page') || route.isFirst,
+      //     arguments: receivedAction);
     }
   }
 }

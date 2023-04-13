@@ -11,7 +11,7 @@
 //
 //   @override
 //   Widget build(BuildContext context) {
-//     return ZegoUIKitPrebuiltCallWithInvitation(
+//     return ZegoUIKitPrebuiltCall(
 //       appID: Statics.zegoAppId, // Fill in the appID that you get from ZEGOCLOUD Admin Console.
 //       appSign: Statics.zegoAppSign, // Fill in the appSign that you get from ZEGOCLOUD Admin Console.
 //       userID: username,
