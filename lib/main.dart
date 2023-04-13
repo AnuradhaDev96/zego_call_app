@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,11 @@ import 'package:http/http.dart' as http;
 
 import 'local_notification_controller.dart';
 import 'message_handler.dart';
+import 'models/user_model.dart';
+import 'services/firebase_service.dart';
+import 'zego/call_invitation_page.dart';
+import 'zego/login_page.dart';
+import 'zego/user_card.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -60,155 +67,144 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3C8339))),
-      home: const MyHomePage(),
+      home: StreamBuilder(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              body: Center(
+                child: Column(
+                  children: const [
+                    CircularProgressIndicator(),
+                    Text("Please wait we are authenticating."),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (snapshot.hasData) {
+            return const DashboardPage();
+          } else {
+            return LoginPage();
+          }
+        },
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  void initState() {
-    super.initState();
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      String? title = message.notification?.title;
-      String? body = message.notification?.body;
-
-      AwesomeNotifications().createNotification(
-          content: NotificationContent(
-            id: 7501,
-            channelKey: "call_channel",
-            color: Colors.white,
-            title: title,
-            body: body,
-            category: NotificationCategory.Call,
-            fullScreenIntent: true,
-            autoDismissible: false,
-            backgroundColor: Colors.orange,
-          ),
-          actionButtons: [
-            NotificationActionButton(key: "ACCEPT", label: "Accept Call", color: Colors.green, autoDismissible: true),
-            NotificationActionButton(key: "REJECT", label: "Reject Call", color: Colors.red, autoDismissible: true),
-          ]);
-      AwesomeNotifications().setListeners(
-        onActionReceivedMethod: (ReceivedAction receivedAction) async {
-          await LocalNotificationController.onActionReceivedMethod(receivedAction);
-        },
-        onNotificationCreatedMethod: (ReceivedNotification receivedNotification) async {
-          await LocalNotificationController.onNotificationCreatedMethod(receivedNotification);
-        },
-        onNotificationDisplayedMethod: (ReceivedNotification receivedNotification) async {
-          await LocalNotificationController.onNotificationDisplayedMethod(receivedNotification);
-        },
-        onDismissActionReceivedMethod: (ReceivedAction receivedAction) async {
-          await LocalNotificationController.onDismissActionReceivedMethod(receivedAction);
-        },
-      );
-    });
-  }
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Communicator"),
+        title: const Text("Sam Caller"),
+        actions: [
+          IconButton(
+            onPressed: () {
+              FirebaseService.logout();
+            },
+            icon: const Icon(Icons.logout, size: 20.0),
+          ),
+        ],
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              "Welcome to communicator app",
-            ),
-            const SizedBox(height: 10.0),
-            ElevatedButton.icon(
-              onPressed: () async {
-                String? token = await FirebaseMessaging.instance.getToken();
-                print("Call token: $token");
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseService.buildViews,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final List<QueryDocumentSnapshot>? documents = snapshot.data?.docs;
+
+            if (documents == null || documents.isEmpty) {
+              return const Text("No Data");
+            }
+
+            return ListView.builder(
+              shrinkWrap: true,
+              itemCount: documents.length,
+              itemBuilder: (context, index) {
+                final model = UserModel.fromMap(documents[index].data() as Map<String, dynamic>);
+                if (!FirebaseService.isCurrentUser(model.email)) {
+                  return UserCard(userModel: model);
+                }
+                return const SizedBox.shrink();
               },
-              icon: const Icon(Icons.token),
-              label: const Text("Get token"),
-            ),
-            ElevatedButton.icon(
-              onPressed: () => sendPushNotification(),
-              icon: const Icon(Icons.send),
-              label: const Text("Send push notification"),
-            ),
-          ],
-        ),
-      ),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      // floatingActionButton: Padding(
-      //   padding: const EdgeInsets.all(8.0),
-      //   child: Row(
-      //     children: [
-      //       ElevatedButton.icon(
-      //         icon: const Icon(Icons.send),
-      //         label: const Text("Send"),
-      //         onPressed: () {},
-      //       )
-      //     ],
-      //   ),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  void _sendNotification() {
-    flutterLocalNotificationsPlugin.show(
-      0,
-      "Testing notification",
-      "Testing information message",
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          MessageHandler.channel.id,
-          MessageHandler.channel.name,
-          channelDescription: MessageHandler.channel.description,
-          color: Colors.blue,
-          playSound: true,
-          icon: "@mipmap/ic_launcher",
-
-        ),
-      ),
-    );
-  }
-
-  Future<void> sendPushNotification() async {
-    var messageKey = "AAAAeKB_HWU:APA91bH7idg4Qrt8j-dgi8kaIsYYnF6VI6qa2_Hr5cCwvS6jSnzwSBXLqiRSkV1fiUSVtrrgTPb98fQ4O76BT64ib46UGoKOJx9MPItv67kE1qkBdJ2_ZHIezrmh76nngGAJrjfNbJ8S";
-    try {
-      http.Response response = await http.post(
-        Uri.parse("https://fcm.googleapis.com/fcm/send"),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'key=$messageKey',
-        },
-        body: jsonEncode(
-          <String, dynamic>{
-            'notification': <String, dynamic>{
-              'body': "Call from Friend",
-              'title': 'Call Center 2',
-            },
-            'priority': 'high',
-            'data': <String, dynamic>{
-              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-              'id': '15',
-              'status': 'done'
-            },
-            'to': "dh7ZZFk7QgSZ2NdLFan1fU:APA91bGis_E94pn1DmxVGqANFWxD-Jgl55nWqUwcxNY2fdAoBVuMHLfqiO7YBYy1rvwB8F9eKQchuzBmqolroCSaS9PtumxLaRh0BuPAxR-pY6CDRx6JqTJOsP8XnXw-4ltTZBiSPyxw",
-            // 'token': authorizedSupplierTokenId
+            );
           },
         ),
-      );
-      response;
-    } catch (e) {
-      e;
-    }
+      ),
+    );
   }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return FutureBuilder<UserModel?>(
+  //       future: FirebaseService.currentUser,
+  //       builder: (context, snapshot) {
+  //         if (snapshot.connectionState == ConnectionState.waiting) {
+  //           return const Center(child: CircularProgressIndicator());
+  //         }
+  //
+  //         if (snapshot.hasData) {
+  //           UserModel? currentUser = snapshot.data;
+  //
+  //           if (currentUser == null) {
+  //             return const Center(child: Text("Problem in authorization. Please login again"));
+  //           }
+  //           return CallInvitationPage(
+  //             username: currentUser.username,
+  //             child: Scaffold(
+  //               appBar: AppBar(
+  //                 title: const Text("Sam Caller"),
+  //                 actions: [
+  //                   IconButton(
+  //                     onPressed: () {
+  //                       FirebaseService.logout();
+  //                     },
+  //                     icon: const Icon(Icons.logout, size: 20.0),
+  //                   ),
+  //                 ],
+  //               ),
+  //               body: Center(
+  //                 child: StreamBuilder<QuerySnapshot>(
+  //                   stream: FirebaseService.buildViews,
+  //                   builder: (context, snapshot) {
+  //                     if (!snapshot.hasData) {
+  //                       return const Center(child: CircularProgressIndicator());
+  //                     }
+  //
+  //                     final List<QueryDocumentSnapshot>? documents = snapshot.data?.docs;
+  //
+  //                     if (documents == null || documents.isEmpty) {
+  //                       return const Text("No Data");
+  //                     }
+  //
+  //                     return ListView.builder(
+  //                       shrinkWrap: true,
+  //                       itemCount: documents.length,
+  //                       itemBuilder: (context, index) {
+  //                         final model = UserModel.fromMap(documents[index].data() as Map<String, dynamic>);
+  //                         if (!FirebaseService.isCurrentUser(model.email)) {
+  //                           return UserCard(userModel: model);
+  //                         }
+  //                         return const SizedBox.shrink();
+  //                       },
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+  //             ),
+  //           );
+  //         }
+  //
+  //         return const Center(child: Text("Please wait. We are setting things up."));
+  //       }
+  //   );
+  // }
 }
