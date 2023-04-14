@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
@@ -69,14 +70,8 @@ class FirebaseService {
         if (data != null) {
           _currentUser = UserModel.fromMap(data);
 
-
-          await ZegoUIKitPrebuiltCallInvitationService().init(
-            appID: Statics.zegoAppId /*input your AppID*/,
-            appSign: Statics.zegoAppSign /*input your AppSign*/,
-            userID: _currentUser!.username,
-            userName: _currentUser!.username,
-            plugins: [ZegoUIKitSignalingPlugin()],
-          );
+          await updateFCMToken(document);
+          await initializeDefaultZegoService(_currentUser!.username, _currentUser!.username);
           return true;
         }
       }
@@ -101,15 +96,27 @@ class FirebaseService {
 
     if (_auth.currentUser?.email != null) {
       var user = await currentUser;
-      await ZegoUIKitPrebuiltCallInvitationService().init(
-        appID: Statics.zegoAppId /*input your AppID*/,
-        appSign: Statics.zegoAppSign /*input your AppSign*/,
-        userID: user!.username,
-        userName: user.username,
-        plugins: [ZegoUIKitSignalingPlugin()],
-      );
+      await initializeDefaultZegoService(user!.username, user.username);
     }
 
+  }
+
+  static Future<void> initializeDefaultZegoService(String userId, String username) async {
+    await ZegoUIKitPrebuiltCallInvitationService().init(
+      appID: Statics.zegoAppId /*input your AppID*/,
+      appSign: Statics.zegoAppSign /*input your AppSign*/,
+      userID: userId,
+      userName: username,
+      plugins: [ZegoUIKitSignalingPlugin()],
+    );
+  }
+
+  static Future<void> updateFCMToken(DocumentSnapshot document) async {
+    await FirebaseMessaging.instance.getToken().then((value) async {
+      var user = await currentUser;
+      user?.fcmToken = value;
+      await document.reference.update(user!.toMap());
+    });
   }
 
 }
