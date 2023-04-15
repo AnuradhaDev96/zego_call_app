@@ -1,11 +1,12 @@
+import 'dart:convert';
+
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
 
-import 'firebase_options.dart';
+import 'local_notification_controller.dart';
 
 class MessageHandler {
   static const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -24,7 +25,7 @@ class MessageHandler {
     AwesomeNotifications().createNotification(
         content: NotificationContent(
       id: 7501,
-      channelKey: "call_channel",
+      channelKey: "basic_channel",
           title: title,
           body: body,
           category: NotificationCategory.Call,
@@ -33,10 +34,77 @@ class MessageHandler {
           backgroundColor: Colors.amber,
     ),
     actionButtons: [
-      NotificationActionButton(key: "ACCEPT", label: "Accept Call", color: Colors.green, autoDismissible: true),
+      NotificationActionButton(key: "ACCEPT", label: "Accept Call", color: Colors.green, autoDismissible: true,),
       NotificationActionButton(key: "REJECT", label: "Reject Call", color: Colors.red, autoDismissible: true),
     ]);
+
+    AwesomeNotifications().setListeners(
+      onActionReceivedMethod: (ReceivedAction receivedAction) async {
+        await LocalNotificationController.onActionReceivedMethod(receivedAction);
+      },
+      onNotificationCreatedMethod: (ReceivedNotification receivedNotification) async {
+        await LocalNotificationController.onNotificationCreatedMethod(receivedNotification);
+      },
+      onNotificationDisplayedMethod: (ReceivedNotification receivedNotification) async {
+        await LocalNotificationController.onNotificationDisplayedMethod(receivedNotification);
+      },
+      onDismissActionReceivedMethod: (ReceivedAction receivedAction) async {
+        await LocalNotificationController.onDismissActionReceivedMethod(receivedAction);
+      },
+    );
   }
+
+  static Future<void> sendPushNotification(String? receiverToken) async {
+    print("Receiver firebase user token: $receiverToken");
+    var messageKey = "AAAAeKB_HWU:APA91bH7idg4Qrt8j-dgi8kaIsYYnF6VI6qa2_Hr5cCwvS6jSnzwSBXLqiRSkV1fiUSVtrrgTPb98fQ4O76BT64ib46UGoKOJx9MPItv67kE1qkBdJ2_ZHIezrmh76nngGAJrjfNbJ8S";
+    try {
+      http.Response response = await http.post(
+        Uri.parse("https://fcm.googleapis.com/fcm/send"),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'key=$messageKey',
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{
+              'body': "Call from Friend",
+              'title': 'Call Center 2',
+            },
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'id': '15',
+              'status': 'done'
+            },
+            'to': receiverToken,
+            // 'token': authorizedSupplierTokenId
+          },
+        ),
+      );
+      response;
+    } catch (e) {
+      e;
+    }
+  }
+
+  // static void showLocalNotification() {
+  //   flutterLocalNotificationsPlugin.show(
+  //     0,
+  //     "Testing notification",
+  //     "Testing information message",
+  //     NotificationDetails(
+  //       android: AndroidNotificationDetails(
+  //         MessageHandler.channel.id,
+  //         MessageHandler.channel.name,
+  //         channelDescription: MessageHandler.channel.description,
+  //         color: Colors.blue,
+  //         playSound: true,
+  //         icon: "@mipmap/ic_launcher",
+  //
+  //       ),
+  //     ),
+  //   );
+  // }
 }
 
 class TempClass{
