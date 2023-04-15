@@ -86,6 +86,25 @@ class MessageHandler {
       e;
     }
   }
+
+  // static void showLocalNotification() {
+  //   flutterLocalNotificationsPlugin.show(
+  //     0,
+  //     "Testing notification",
+  //     "Testing information message",
+  //     NotificationDetails(
+  //       android: AndroidNotificationDetails(
+  //         MessageHandler.channel.id,
+  //         MessageHandler.channel.name,
+  //         channelDescription: MessageHandler.channel.description,
+  //         color: Colors.blue,
+  //         playSound: true,
+  //         icon: "@mipmap/ic_launcher",
+  //
+  //       ),
+  //     ),
+  //   );
+  // }
 }
 
 class TempClass{

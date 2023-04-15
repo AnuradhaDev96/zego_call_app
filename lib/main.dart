@@ -18,7 +18,7 @@ import 'zego/call_history_page.dart';
 import 'zego/login_page.dart';
 import 'zego/user_card.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
   AwesomeNotifications().initialize(null, [
