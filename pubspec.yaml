@@ -36,8 +36,11 @@ dependencies:
   firebase_core: ^2.9.0
   firebase_messaging: ^14.4.0
   flutter_local_notifications: ^13.0.0
+  get_it: ^7.2.0
   awesome_notifications: ^0.7.4+1
   http: ^0.13.5
+  intl: ^0.17.0
+  provider: ^6.0.5
   zego_uikit_prebuilt_call: ^3.1.1
   zego_uikit_signaling_plugin: ^2.0.4
 

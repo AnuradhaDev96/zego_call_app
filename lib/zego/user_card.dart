@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import '../message_handler.dart';
+import '../models/call_history_record.dart';
+import '../models/enums/call_type.dart';
 import '../models/user_model.dart';
+import '../services/firebase_service.dart';
 
 class UserCard extends StatefulWidget {
   const UserCard({Key? key, required this.userModel}) : super(key: key);
@@ -72,5 +76,13 @@ class _UserCardState extends State<UserCard> {
         ],
         buttonSize: const Size(50.0, 50.0),
         iconSize: const Size(35.0, 35.0),
+        onPressed: (String code, String message, List<String> invitees) async {
+          CallHistoryRecord record = CallHistoryRecord(
+              callResult: CallType.outgoing, time: DateTime.now(), callerUsername: widget.userModel.username);
+          await FirebaseService.saveCallHistoryRecord(record);
+
+          await MessageHandler.sendPushNotification(widget.userModel.fcmToken);
+        },
+        timeoutSeconds: 10,
       );
 }

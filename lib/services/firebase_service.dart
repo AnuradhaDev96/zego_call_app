@@ -2,10 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
+import '../change_notifiers/call_state_change_notifier.dart';
 import '../common/statics.dart';
+import '../main.dart';
+import '../models/call_history_record.dart';
+import '../models/enums/call_type.dart';
 import '../models/user_model.dart';
 
 class FirebaseService {
@@ -13,6 +18,7 @@ class FirebaseService {
   static final _store = FirebaseFirestore.instance;
 
   static UserModel? _currentUser;
+
   static Future<UserModel?> get currentUser async {
     if (_currentUser == null) {
       final document = await _store.collection("users").doc(_auth.currentUser!.uid).get();
@@ -26,6 +32,9 @@ class FirebaseService {
   }
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> get buildViews => _store.collection("users").snapshots();
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> get buildCallHistoryOfCurrentUser =>
+      _store.collection("users").doc(_auth.currentUser!.uid).collection("call_history").orderBy("time").snapshots();
 
   static Future<bool> signUp({
     required String name,
@@ -51,7 +60,7 @@ class FirebaseService {
       }
 
       return false;
-    } catch(e) {
+    } catch (e) {
       debugPrint(e.toString());
       return false;
     }
@@ -77,7 +86,7 @@ class FirebaseService {
       }
 
       return false;
-    } catch(e) {
+    } catch (e) {
       debugPrint(e.toString());
       return false;
     }
@@ -93,21 +102,58 @@ class FirebaseService {
   }
 
   static void initializeZegoServiceIfUserLoggedIn() async {
-
     if (_auth.currentUser?.email != null) {
       var user = await currentUser;
       await initializeDefaultZegoService(user!.username, user.username);
     }
-
   }
 
   static Future<void> initializeDefaultZegoService(String userId, String username) async {
+    var callStatusNotifier = Provider.of<CallStateChangeNotifier>(MyApp.navigatorKey.currentContext!, listen: false);
+
     await ZegoUIKitPrebuiltCallInvitationService().init(
       appID: Statics.zegoAppId /*input your AppID*/,
       appSign: Statics.zegoAppSign /*input your AppSign*/,
       userID: userId,
       userName: username,
       plugins: [ZegoUIKitSignalingPlugin()],
+      events: ZegoUIKitPrebuiltCallInvitationEvents(
+        onIncomingCallReceived:
+            (String callID, ZegoCallUser caller, ZegoCallType callType, List<ZegoCallUser> callees) {
+          Provider.of<CallStateChangeNotifier>(MyApp.navigatorKey.currentContext!, listen: false)
+              .toggleIncomingCallStatus(true, caller);
+        },
+        onIncomingCallAcceptButtonPressed: () async {
+          CallHistoryRecord record = CallHistoryRecord(
+              callResult: CallType.received, time: DateTime.now(), callerUsername: callStatusNotifier.caller!.id);
+          await saveCallHistoryRecord(record);
+
+          callStatusNotifier.toggleIncomingCallStatus(false);
+        },
+        onIncomingCallDeclineButtonPressed: () async {
+          CallHistoryRecord record = CallHistoryRecord(
+              callResult: CallType.received, time: DateTime.now(), callerUsername: callStatusNotifier.caller!.id);
+          await saveCallHistoryRecord(record);
+
+          callStatusNotifier.toggleIncomingCallStatus(false);
+        },
+        onIncomingCallCanceled: (String callID, ZegoCallUser caller) async {
+          CallHistoryRecord record =
+              CallHistoryRecord(callResult: CallType.missed, time: DateTime.now(), callerUsername: caller.id);
+          await saveCallHistoryRecord(record);
+
+          Provider.of<CallStateChangeNotifier>(MyApp.navigatorKey.currentContext!, listen: false)
+              .toggleIncomingCallStatus(false);
+        },
+        onIncomingCallTimeout: (String callID, ZegoCallUser caller) async {
+          CallHistoryRecord record =
+              CallHistoryRecord(callResult: CallType.missed, time: DateTime.now(), callerUsername: caller.id);
+          await saveCallHistoryRecord(record);
+
+          Provider.of<CallStateChangeNotifier>(MyApp.navigatorKey.currentContext!, listen: false)
+              .toggleIncomingCallStatus(false);
+        },
+      ),
     );
   }
 
@@ -118,5 +164,14 @@ class FirebaseService {
       await document.reference.update(user!.toMap());
     });
   }
+
+  static Future<void> saveCallHistoryRecord(CallHistoryRecord historyRecord) async {
+    var id = await _store
+        .collection("users")
+        .doc(_auth.currentUser!.uid)
+        .collection("call_history")
+        .add(historyRecord.toMap());
+  }
+
 
 }
