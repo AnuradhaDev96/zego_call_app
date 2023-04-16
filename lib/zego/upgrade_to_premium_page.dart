@@ -47,7 +47,6 @@ class UpgradeToPremiumPage extends StatelessWidget {
                               ElevatedButton(
                                 onPressed: () {
                                   makePayment("100", "INR");
-
                                 },
                                 style: ElevatedButton.styleFrom(
                                   elevation: 4.0,
@@ -55,8 +54,21 @@ class UpgradeToPremiumPage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
                                 ),
-                                child: const Text("Make Payment"),
-                              )
+                                child: const Text("Make Payment (Credit/Debit card)"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  makePaymentWithGooglePay("100", "INR");
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 4.0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                  backgroundColor: const Color(0xFFF3AF35)
+                                ),
+                                child: const Text("Make Payment (Google Pay)"),
+                              ),
                             ],
                           ),
                         ),
@@ -72,6 +84,26 @@ class UpgradeToPremiumPage extends StatelessWidget {
     );
   }
 
+  Future<void> makePaymentWithGooglePay(String amount, String currency) async {
+    try {
+      paymentIntentData = await createPaymentIntent(amount, currency);
+
+      // var googlePayOpt = const PaymentSheetGooglePay(merchantCountryCode: 'IN', testEnv: true);
+      var gInit = await Stripe.instance.isGooglePaySupported(const IsGooglePaySupportedParams(testEnv: true));
+      debugPrint("Check GPay availability: $gInit");
+
+      var gPayInitParams = const GooglePayInitParams(merchantName: 'Sam', countryCode: 'IN', testEnv: true);
+
+      if (paymentIntentData != null) {
+        await Stripe.instance.initGooglePay(
+            gPayInitParams
+        );
+        displayPaymentSheetForGooglePay();
+      }
+    } catch (e) {
+      debugPrint("$e");
+    }
+  }
 
 
   Future<void> makePayment(String amount, String currency) async {
@@ -81,7 +113,7 @@ class UpgradeToPremiumPage extends StatelessWidget {
       if (paymentIntentData != null) {
         await Stripe.instance.initPaymentSheet(
             paymentSheetParameters: SetupPaymentSheetParameters(
-              googlePay: const PaymentSheetGooglePay(merchantCountryCode: 'IN'),
+              googlePay: const PaymentSheetGooglePay(merchantCountryCode: 'IN', testEnv: true),
               merchantDisplayName: "Prospects",
               customerId: paymentIntentData!["customer"],
               paymentIntentClientSecret: paymentIntentData!["client_secret"],
@@ -127,6 +159,22 @@ class UpgradeToPremiumPage extends StatelessWidget {
   void displayPaymentSheet() async {
     try {
       await Stripe.instance.presentPaymentSheet();
+      Get.snackbar("Payment info", "Payment Successful");
+    } on Exception catch(e) {
+      if (e is StripeException) {
+        debugPrint("Error from stripe $e");
+      } else {
+        debugPrint("Error occurred $e");
+      }
+    } catch (e) {
+      debugPrint("EXCEPTION $e");
+    }
+  }
+
+  void displayPaymentSheetForGooglePay() async {
+    try {
+      var presentParams = const PresentGooglePayParams(clientSecret: Statics.stripeSecretKey);
+      await Stripe.instance.presentGooglePay(presentParams);
       Get.snackbar("Payment info", "Payment Successful");
     } on Exception catch(e) {
       if (e is StripeException) {
