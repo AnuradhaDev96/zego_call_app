@@ -88,9 +88,8 @@ class UpgradeToPremiumPage extends StatelessWidget {
     try {
       paymentIntentData = await createPaymentIntent(amount, currency);
 
-      // var googlePayOpt = const PaymentSheetGooglePay(merchantCountryCode: 'IN', testEnv: true);
-      var gInit = await Stripe.instance.isGooglePaySupported(const IsGooglePaySupportedParams(testEnv: true));
-      debugPrint("Check GPay availability: $gInit");
+      // var gInit = await Stripe.instance.isGooglePaySupported(const IsGooglePaySupportedParams(testEnv: true));
+      // debugPrint("Check GPay availability: $gInit");
 
       var gPayInitParams = const GooglePayInitParams(merchantName: 'Sam', countryCode: 'IN', testEnv: true);
 
