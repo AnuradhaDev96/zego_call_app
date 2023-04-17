@@ -87,6 +87,7 @@ class _MyAppState extends State<MyApp> {
     return ChangeNotifierProvider(
       create: (context) => CallStateChangeNotifier(),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         navigatorKey: MyApp.navigatorKey,
         title: 'Flutter Demo',
         theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3C8339))),

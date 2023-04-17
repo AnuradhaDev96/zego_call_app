@@ -72,6 +72,17 @@ class LoginPage extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 15.0),
+            ElevatedButton(
+              onPressed: () => _onLoginWithGoogleTap(context),
+              style: ElevatedButton.styleFrom(
+                elevation: 8.0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              child: const Text("Google Sign in"),
+            ),
           ],
         ),
       ),
@@ -101,6 +112,30 @@ class LoginPage extends StatelessWidget {
           ),
         );
       }
+    }
+  }
+
+  void _onLoginWithGoogleTap(BuildContext context) async {
+    var sucsess = await FirebaseService.loginWithGoogle();
+    if (!sucsess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Row(
+            children: const [
+              Padding(
+                padding: EdgeInsets.only(right: 5.0),
+                child: Icon(Icons.warning_amber),
+              ),
+              Expanded(
+                child: Text(
+                  "Google Login failed",
+                ),
+              )
+            ],
+          ),
+        ),
+      );
     }
   }
 }

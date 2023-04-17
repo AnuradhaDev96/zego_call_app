@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
@@ -54,8 +55,8 @@ class FirebaseService {
           return false;
         }
 
-        await documentReference.set(user.toMap());
-        _currentUser = user;
+        await createUserRecordWithFCMToken(documentReference, user);
+        await initializeDefaultZegoService(_currentUser!.username, _currentUser!.username);
         return true;
       }
 
@@ -165,6 +166,14 @@ class FirebaseService {
     });
   }
 
+  static Future<void> createUserRecordWithFCMToken(DocumentReference documentReference, UserModel userModel) async {
+    await FirebaseMessaging.instance.getToken().then((value) async {
+      userModel.fcmToken = value;
+      await documentReference.set(userModel.toMap());
+      _currentUser = userModel;
+    });
+  }
+
   static Future<void> saveCallHistoryRecord(CallHistoryRecord historyRecord) async {
     var id = await _store
         .collection("users")
@@ -173,5 +182,48 @@ class FirebaseService {
         .add(historyRecord.toMap());
   }
 
+  static Future<bool> loginWithGoogle() async {
+    //google_sign_in package
+    GoogleSignInAccount? googleSignInAccount = await GoogleSignIn().signIn();
+    if (googleSignInAccount != null) {
+      GoogleSignInAuthentication? googleAuth = await googleSignInAccount.authentication;
+
+      //Firebase auth package
+      AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken
+      );
+
+      UserCredential firebaseCredentials = await _auth.signInWithCredential(credential);
+      debugPrint("Google sign user: ${firebaseCredentials.user?.displayName}");
+
+      if (firebaseCredentials.user != null) {
+        final documentReference = _store.collection("users").doc(firebaseCredentials.user!.uid);
+        var document = await documentReference.get();
+
+        // check user is registered before
+        if (document.exists && document.data() != null) {
+          // user has registered and trying to login with initialization
+          _currentUser = UserModel.fromMap(document.data()!);
+
+          await updateFCMToken(document);
+          await initializeDefaultZegoService(_currentUser!.username, _currentUser!.username);
+          return true;
+        } else {
+          // new user record should be created and initialize data
+          final UserModel user = UserModel(
+            email: firebaseCredentials.user!.email!,
+            name: firebaseCredentials.user!.displayName!,
+            username: firebaseCredentials.user!.email!,
+          );
+
+          await createUserRecordWithFCMToken(documentReference, user);
+          await initializeDefaultZegoService(_currentUser!.username, _currentUser!.username);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
 }
