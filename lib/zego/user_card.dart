@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import '../message_handler.dart';
@@ -39,7 +41,7 @@ class _UserCardState extends State<UserCard> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: Theme.of(context).primaryColor,
+            backgroundColor: Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
             radius: 20.0,
             child: Center(
               child: Text(

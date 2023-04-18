@@ -11,6 +11,7 @@ import '../services/firebase_service.dart';
 class UpgradeToPremiumPage extends StatelessWidget {
   UpgradeToPremiumPage({Key? key}) : super(key: key);
   Map<String, dynamic>? paymentIntentData;
+  String premiumPackageCost = "380";
 
   @override
   Widget build(BuildContext context) {
@@ -57,15 +58,15 @@ class UpgradeToPremiumPage extends StatelessWidget {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: const [
-                                  Text("Upgrade to Premium", style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
-                                  Text("INR 380.00", style: TextStyle(fontSize: 26.0, fontWeight: FontWeight.w900)),
+                                children: [
+                                  const Text("Upgrade to Premium", style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
+                                  Text("INR $premiumPackageCost.00", style: const TextStyle(fontSize: 26.0, fontWeight: FontWeight.w900)),
                                 ],
                               ),
                               const SizedBox(height: 5.0),
                               ElevatedButton(
                                 onPressed: () {
-                                  makePayment(context, "100", "INR");
+                                  makePayment(context, premiumPackageCost, "INR");
                                 },
                                 style: ElevatedButton.styleFrom(
                                   elevation: 4.0,
@@ -77,7 +78,7 @@ class UpgradeToPremiumPage extends StatelessWidget {
                               ),
                               ElevatedButton(
                                 onPressed: () {
-                                  makePaymentWithGooglePay("100", "INR");
+                                  makePaymentWithGooglePay(premiumPackageCost, "INR");
                                 },
                                 style: ElevatedButton.styleFrom(
                                   elevation: 4.0,

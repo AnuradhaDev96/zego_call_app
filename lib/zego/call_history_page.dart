@@ -14,6 +14,7 @@ import '../services/firebase_service.dart';
 class CallHistoryPage extends StatelessWidget {
   const CallHistoryPage({Key? key}) : super(key: key);
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,12 +52,25 @@ class CallHistoryPage extends StatelessWidget {
                     );
                   }
 
+                  var callHistoryList = documents.reversed
+                      .map((model) => CallHistoryRecord.fromMap(model.data() as Map<String, dynamic>))
+                      .toList();
+
+                  var usersSet = callHistoryList.map((record) => record.callerUsername).toSet().toList(growable: false);
+
+                  Map<String, Color> colorList = {
+                    for (var user in usersSet) user: Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0)
+                  };
+
                   return ListView.builder(
                     shrinkWrap: true,
                     itemCount: documents.length,
                     itemBuilder: (context, index) {
-                      final historyRecord = CallHistoryRecord.fromMap(documents.reversed.toList()[index].data() as Map<String, dynamic>);
-                      return historyRecordCard(historyRecord);
+                      final historyRecord = callHistoryList[index];
+                      return historyRecordCard(
+                          historyRecord,
+                          colorList[historyRecord.callerUsername] ??
+                              Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0));
                     },
                   );
                 },
@@ -116,7 +130,7 @@ class CallHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget historyRecordCard(CallHistoryRecord record) {
+  Widget historyRecordCard(CallHistoryRecord record, Color avatarColor) {
     return Card(
       color: const Color(0xFFF2F8F4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
@@ -134,7 +148,7 @@ class CallHistoryPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundColor: Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+                  backgroundColor: avatarColor,
                   radius: 20.0,
                   child: Center(
                     child: Text(
