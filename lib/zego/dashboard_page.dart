@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +10,7 @@ import '../services/firebase_service.dart';
 import 'call_history_page.dart';
 import 'upgrade_to_premium_page.dart';
 import 'user_card.dart';
+import 'user_profile_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -92,7 +91,7 @@ class DashboardPage extends StatelessWidget {
                                 child: Ink(
                                   decoration: const BoxDecoration(
                                     gradient: LinearGradient(
-                                        colors: [Color(0xFF587359), Color(0xFF1E4221)],
+                                        colors: [Color(0xFFB4B4B4), Color(0xFF464646)],
                                         begin: Alignment.topRight,
                                         end: Alignment.bottomLeft),
                                     borderRadius: BorderRadius.only(
@@ -109,13 +108,27 @@ class DashboardPage extends StatelessWidget {
                                       children: [
                                         Row(
                                           children: [
-                                            CircleAvatar(
-                                              backgroundColor: const Color(0xFFEE6614),
-                                              radius: 30.0,
-                                              child: Center(
-                                                child: Text(
-                                                  currentUser.name.substring(0, 1).toUpperCase(),
-                                                  style: const TextStyle(color: Colors.white, fontSize: 20.0),
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) => UserProfilePage(
+                                                      currentUser: currentUser,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: Hero(
+                                                tag: 'user_profile',
+                                                child: CircleAvatar(
+                                                  backgroundColor: const Color(0xFFEE6614),
+                                                  radius: 30.0,
+                                                  child: Center(
+                                                    child: Text(
+                                                      currentUser.name.substring(0, 1).toUpperCase(),
+                                                      style: const TextStyle(color: Colors.white, fontSize: 20.0),
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -133,7 +146,7 @@ class DashboardPage extends StatelessWidget {
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16.0,
-                                            color: Color(0xFFC7C7C7),
+                                            color: Color(0xFFFCFCFC),
                                           ),
                                         ),
                                         const SizedBox(height: 5.0),
