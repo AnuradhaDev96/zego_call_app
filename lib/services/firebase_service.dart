@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -12,6 +14,7 @@ import '../common/statics.dart';
 import '../main.dart';
 import '../models/call_history_record.dart';
 import '../models/enums/call_type.dart';
+import '../models/enums/subscription.dart';
 import '../models/user_model.dart';
 
 class FirebaseService {
@@ -32,10 +35,16 @@ class FirebaseService {
     return _currentUser;
   }
 
+  static Future<bool> get isPremiumAccount async =>
+      await currentUser.then((userModel) => userModel?.currentPackage == Subscription.premium);
+
   static Stream<QuerySnapshot<Map<String, dynamic>>> get buildViews => _store.collection("users").snapshots();
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> get buildCallHistoryOfCurrentUser =>
       _store.collection("users").doc(_auth.currentUser!.uid).collection("call_history").orderBy("time").snapshots();
+
+  static Stream<DocumentSnapshot<Map<String, dynamic>>> get currentUserSnapshot =>
+      _store.collection("users").doc(_auth.currentUser!.uid).snapshots();
 
   static Future<bool> signUp({
     required String name,
@@ -95,6 +104,7 @@ class FirebaseService {
 
   static void logout() async {
     await ZegoUIKitPrebuiltCallInvitationService().uninit();
+    _currentUser = null;
     _auth.signOut();
   }
 
@@ -226,4 +236,17 @@ class FirebaseService {
     return false;
   }
 
+  static Future<void> updateToPremiumPackageCurrentUser() async {
+    final document = await _store.collection("users").doc(_auth.currentUser!.uid).get();
+
+    var user = await currentUser;
+    user?.currentPackage = Subscription.premium;
+    await document.reference.update(user!.toMap());
+    _currentUser?.currentPackage = user.currentPackage;
+
+    _userSubscriptionController.sink.add(await isPremiumAccount);
+  }
+
+  static final StreamController<bool> _userSubscriptionController =  StreamController<bool>.broadcast();
+  static Stream<bool> get currentSubscriptionStream => _userSubscriptionController.stream;
 }

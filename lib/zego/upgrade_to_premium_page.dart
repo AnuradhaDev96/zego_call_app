@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../common/statics.dart';
+import '../services/firebase_service.dart';
 
 class UpgradeToPremiumPage extends StatelessWidget {
   UpgradeToPremiumPage({Key? key}) : super(key: key);
@@ -20,11 +21,22 @@ class UpgradeToPremiumPage extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(8.0, 10.0, 8.0, 15.0),
+            child: Text(
+              "Upgrade your current package to view this feature.",
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
           Row(
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
+                  padding: const EdgeInsets.only(top: 10.0, left: 8.0, right: 8.0,),
                   child: Material(
                     color: const Color(0xFF0E3B10),
                     shape: RoundedRectangleBorder(
@@ -42,11 +54,18 @@ class UpgradeToPremiumPage extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Upgrade to Premium", style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: const [
+                                  Text("Upgrade to Premium", style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
+                                  Text("INR 380.00", style: TextStyle(fontSize: 26.0, fontWeight: FontWeight.w900)),
+                                ],
+                              ),
                               const SizedBox(height: 5.0),
                               ElevatedButton(
                                 onPressed: () {
-                                  makePayment("100", "INR");
+                                  makePayment(context, "100", "INR");
                                 },
                                 style: ElevatedButton.styleFrom(
                                   elevation: 4.0,
@@ -105,7 +124,7 @@ class UpgradeToPremiumPage extends StatelessWidget {
   }
 
 
-  Future<void> makePayment(String amount, String currency) async {
+  Future<void> makePayment(BuildContext context, String amount, String currency) async {
     try {
       paymentIntentData = await createPaymentIntent(amount, currency);
 
@@ -119,7 +138,7 @@ class UpgradeToPremiumPage extends StatelessWidget {
               customerEphemeralKeySecret: paymentIntentData!["ephemeralkey"],
             )
         );
-        displayPaymentSheet();
+        displayPaymentSheet(context);
       }
     } catch (e) {
       debugPrint("$e");
@@ -155,10 +174,20 @@ class UpgradeToPremiumPage extends StatelessWidget {
     return a.toString();
   }
 
-  void displayPaymentSheet() async {
+  void displayPaymentSheet(BuildContext context) async {
     try {
       await Stripe.instance.presentPaymentSheet();
-      Get.snackbar("Payment info", "Payment Successful");
+      // Get.snackbar("Payment info", "Payment Successful");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text("Payment Success - Sam Caller"),
+          duration: Duration(milliseconds: 500),
+
+        ),
+      );
+      await FirebaseService.updateToPremiumPackageCurrentUser();
     } on Exception catch(e) {
       if (e is StripeException) {
         debugPrint("Error from stripe $e");

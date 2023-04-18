@@ -77,12 +77,11 @@ class _UserCardState extends State<UserCard> {
         buttonSize: const Size(50.0, 50.0),
         iconSize: const Size(35.0, 35.0),
         onPressed: (String code, String message, List<String> invitees) async {
+          await MessageHandler.sendPushNotification(widget.userModel.fcmToken);
           CallHistoryRecord record = CallHistoryRecord(
               callResult: CallType.outgoing, time: DateTime.now(), callerUsername: widget.userModel.username);
           await FirebaseService.saveCallHistoryRecord(record);
-
-          await MessageHandler.sendPushNotification(widget.userModel.fcmToken);
         },
-        timeoutSeconds: 10,
+        timeoutSeconds: 60,
       );
 }

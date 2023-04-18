@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 
+import 'common/statics.dart';
 import 'local_notification_controller.dart';
+import 'services/firebase_service.dart';
 
 class MessageHandler {
   static const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -23,20 +25,31 @@ class MessageHandler {
     String? body = message.notification?.body;
 
     AwesomeNotifications().createNotification(
-        content: NotificationContent(
-      id: 7501,
-      channelKey: "basic_channel",
-          title: title,
-          body: body,
-          category: NotificationCategory.Call,
-          fullScreenIntent: true,
-          autoDismissible: false,
-          backgroundColor: Colors.amber,
-    ),
-    actionButtons: [
-      NotificationActionButton(key: "ACCEPT", label: "Accept Call", color: Colors.green, autoDismissible: true,),
-      NotificationActionButton(key: "REJECT", label: "Reject Call", color: Colors.red, autoDismissible: true),
-    ]);
+      content: NotificationContent(
+        id: 7501,
+        channelKey: "basic_channel",
+        title: title,
+        body: body,
+        category: NotificationCategory.Call,
+        fullScreenIntent: true,
+        autoDismissible: false,
+        backgroundColor: Colors.amber,
+      ),
+      actionButtons: [
+        NotificationActionButton(
+          key: "ACCEPT",
+          label: "Accept Call",
+          color: const Color(0xFF83A980),
+          autoDismissible: true,
+        ),
+        NotificationActionButton(
+          key: "REJECT",
+          label: "Reject Call",
+          color: const Color(0xFFF17474),
+          autoDismissible: true,
+        ),
+      ],
+    );
 
     AwesomeNotifications().setListeners(
       onActionReceivedMethod: (ReceivedAction receivedAction) async {
@@ -56,19 +69,20 @@ class MessageHandler {
 
   static Future<void> sendPushNotification(String? receiverToken) async {
     print("Receiver firebase user token: $receiverToken");
-    var messageKey = "AAAAeKB_HWU:APA91bH7idg4Qrt8j-dgi8kaIsYYnF6VI6qa2_Hr5cCwvS6jSnzwSBXLqiRSkV1fiUSVtrrgTPb98fQ4O76BT64ib46UGoKOJx9MPItv67kE1qkBdJ2_ZHIezrmh76nngGAJrjfNbJ8S";
+    var currentUser = await FirebaseService.currentUser;
+
     try {
       http.Response response = await http.post(
         Uri.parse("https://fcm.googleapis.com/fcm/send"),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'key=$messageKey',
+          'Authorization': 'key=${Statics.fcmKey}',
         },
         body: jsonEncode(
           <String, dynamic>{
             'notification': <String, dynamic>{
-              'body': "Call from Friend",
-              'title': 'Call Center 2',
+              'body': "Incoming call...",
+              'title': '${currentUser?.name}',
             },
             'priority': 'high',
             'data': <String, dynamic>{

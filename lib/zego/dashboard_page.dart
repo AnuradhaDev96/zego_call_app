@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../change_notifiers/call_state_change_notifier.dart';
+import '../common/common_utils.dart';
+import '../models/enums/subscription.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
 import 'call_history_page.dart';
@@ -18,15 +20,30 @@ class DashboardPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Sam Caller"),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => UpgradeToPremiumPage()));
-            },
-            icon: const Icon(Icons.star, size: 20.0),
+          StreamBuilder(
+            stream: FirebaseService.currentUserSnapshot,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
+                return const SizedBox.shrink();
+              }
+
+              print("snapshot of doc: ${snapshot.data?.data() as Map<String, dynamic>}");
+              var currentUser = UserModel.fromMap(snapshot.data?.data() as Map<String, dynamic>);
+              if (currentUser.currentPackage == Subscription.premium) {
+                return const SizedBox.shrink();
+              } else {
+                return IconButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => UpgradeToPremiumPage()));
+                  },
+                  icon: const Icon(Icons.star, size: 20.0),
+                );
+              }
+            }
           ),
           IconButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CallHistoryPage()));
+              CommonUtils.navigateToPageBasedOnSubscription(context, const CallHistoryPage());
             },
             icon: const Icon(Icons.history, size: 20.0),
           ),

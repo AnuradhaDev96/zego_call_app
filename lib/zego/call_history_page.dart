@@ -34,7 +34,21 @@ class CallHistoryPage extends StatelessWidget {
                   final List<QueryDocumentSnapshot>? documents = snapshot.data?.docs;
 
                   if (documents == null || documents.isEmpty) {
-                    return const Text("No Data");
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.only(top: 10.0),
+                          child: Text(
+                            "Call history is empty",
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
                   }
 
                   return ListView.builder(
@@ -129,16 +143,19 @@ class CallHistoryPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 15.0),
-                Text(
-                  record.callerUsername,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.0,
+                Expanded(
+                  child: Text(
+                    record.callerUsername,
+                    textAlign: TextAlign.left,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.0,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                // const Spacer(),
                 actionButton(isVideoCall: false, calleeUsername: record.callerUsername),
                 actionButton(calleeUsername: record.callerUsername),
               ],
