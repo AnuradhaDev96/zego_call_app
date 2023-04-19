@@ -14,6 +14,7 @@ import '../common/statics.dart';
 import '../main.dart';
 import '../models/call_history_record.dart';
 import '../models/enums/call_type.dart';
+import '../models/enums/online_status.dart';
 import '../models/enums/subscription.dart';
 import '../models/user_model.dart';
 
@@ -66,6 +67,7 @@ class FirebaseService {
 
         await createUserRecordWithFCMToken(documentReference, user);
         await initializeDefaultZegoService(_currentUser!.username, _currentUser!.username);
+        await setOnlineStatus(OnlineStatus.online);
         return true;
       }
 
@@ -91,6 +93,7 @@ class FirebaseService {
 
           await updateFCMToken(document);
           await initializeDefaultZegoService(_currentUser!.username, _currentUser!.username);
+          await setOnlineStatus(OnlineStatus.online);
           return true;
         }
       }
@@ -104,8 +107,10 @@ class FirebaseService {
 
   static void logout() async {
     await ZegoUIKitPrebuiltCallInvitationService().uninit();
-    _currentUser = null;
-    _auth.signOut();
+    await setOnlineStatus(OnlineStatus.offline).then((value) {
+      _currentUser = null;
+      _auth.signOut();
+    });
   }
 
   static bool isCurrentUser(String email) {
@@ -116,6 +121,7 @@ class FirebaseService {
     if (_auth.currentUser?.email != null) {
       var user = await currentUser;
       await initializeDefaultZegoService(user!.username, user.username);
+      setOnlineStatus(OnlineStatus.online);
     }
   }
 
@@ -199,10 +205,8 @@ class FirebaseService {
       GoogleSignInAuthentication? googleAuth = await googleSignInAccount.authentication;
 
       //Firebase auth package
-      AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken
-      );
+      AuthCredential credential =
+          GoogleAuthProvider.credential(accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
 
       UserCredential firebaseCredentials = await _auth.signInWithCredential(credential);
       debugPrint("Google sign user: ${firebaseCredentials.user?.displayName}");
@@ -218,6 +222,7 @@ class FirebaseService {
 
           await updateFCMToken(document);
           await initializeDefaultZegoService(_currentUser!.username, _currentUser!.username);
+          await setOnlineStatus(OnlineStatus.online);
           return true;
         } else {
           // new user record should be created and initialize data
@@ -247,6 +252,20 @@ class FirebaseService {
     _userSubscriptionController.sink.add(await isPremiumAccount);
   }
 
-  static final StreamController<bool> _userSubscriptionController =  StreamController<bool>.broadcast();
+  static final StreamController<bool> _userSubscriptionController = StreamController<bool>.broadcast();
+
   static Stream<bool> get currentSubscriptionStream => _userSubscriptionController.stream;
+
+  static Future<void> setOnlineStatus(OnlineStatus onlineStatus) async {
+    print("Online status based on app: ${onlineStatus.toDisplayString()}");
+    final document = await _store.collection("users").doc(_auth.currentUser!.uid).get();
+
+    if (document.exists) {
+      var currentUserModel = await currentUser;
+      if (currentUserModel != null) {
+        currentUserModel.onlineStatus = onlineStatus;
+        await document.reference.update(currentUserModel.toMap());
+      }
+    }
+  }
 }

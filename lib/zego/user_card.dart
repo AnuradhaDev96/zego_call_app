@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:badges/badges.dart' as badges;
 import 'package:flutter/material.dart';
+import 'package:push_notifications_app/models/enums/online_status.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import '../message_handler.dart';
 import '../models/call_history_record.dart';
@@ -40,12 +42,20 @@ class _UserCardState extends State<UserCard> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          CircleAvatar(
-            backgroundColor: Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
-            radius: 20.0,
-            child: Center(
-              child: Text(
-                widget.userModel.name.substring(0, 1).toUpperCase(),
+          badges.Badge(
+            badgeStyle: badges.BadgeStyle(
+              badgeColor: widget.userModel.onlineStatus.toBadgeColor(),
+              elevation: 5.0,
+            ),
+            position: badges.BadgePosition.bottomEnd(end: 0.5, bottom: 0.5),
+            badgeContent: widget.userModel.onlineStatus.toDisplayIcon(),
+            child: CircleAvatar(
+              backgroundColor: Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+              radius: 20.0,
+              child: Center(
+                child: Text(
+                  widget.userModel.name.substring(0, 1).toUpperCase(),
+                ),
               ),
             ),
           ),

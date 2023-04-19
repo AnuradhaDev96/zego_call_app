@@ -12,6 +12,7 @@ import 'change_notifiers/call_state_change_notifier.dart';
 import 'common/dependency_locator.dart';
 import 'common/statics.dart';
 import 'message_handler.dart';
+import 'models/enums/online_status.dart';
 import 'services/firebase_service.dart';
 import 'zego/dashboard_page.dart';
 import 'zego/login_page.dart';
@@ -72,14 +73,36 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
   // This widget is the root of your application.
   // static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(MyApp.navigatorKey);
     FirebaseService.initializeZegoServiceIfUserLoggedIn();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    final isAppBackground = state == AppLifecycleState.paused;
+    final isAppTerminated = state == AppLifecycleState.detached;
+    final isAppOnScreen = state == AppLifecycleState.resumed;
+    final isUserAway = state == AppLifecycleState.inactive;
+
+    if (isAppOnScreen) {
+      //set online
+      FirebaseService.setOnlineStatus(OnlineStatus.online);
+    } else if (isAppBackground || isUserAway) {
+      //set away
+      FirebaseService.setOnlineStatus(OnlineStatus.away);
+    } else {
+      //offline
+      FirebaseService.setOnlineStatus(OnlineStatus.offline);
+    }
   }
 
   @override

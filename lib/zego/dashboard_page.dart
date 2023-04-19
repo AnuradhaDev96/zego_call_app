@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:badges/badges.dart' as badges;
 import '../change_notifiers/call_state_change_notifier.dart';
 import '../common/common_utils.dart';
+import '../models/enums/online_status.dart';
 import '../models/enums/subscription.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
@@ -120,13 +122,21 @@ class DashboardPage extends StatelessWidget {
                                               },
                                               child: Hero(
                                                 tag: 'user_profile',
-                                                child: CircleAvatar(
-                                                  backgroundColor: const Color(0xFFEE6614),
-                                                  radius: 30.0,
-                                                  child: Center(
-                                                    child: Text(
-                                                      currentUser.name.substring(0, 1).toUpperCase(),
-                                                      style: const TextStyle(color: Colors.white, fontSize: 20.0),
+                                                child: badges.Badge(
+                                                  badgeStyle: badges.BadgeStyle(
+                                                    badgeColor: currentUser.onlineStatus.toBadgeColor(),
+                                                    elevation: 5.0,
+                                                  ),
+                                                  position: badges.BadgePosition.bottomEnd(end: 0.5, bottom: 0.5),
+                                                  badgeContent: currentUser.onlineStatus.toDisplayIcon(10.0),
+                                                  child: CircleAvatar(
+                                                    backgroundColor: const Color(0xFFEE6614),
+                                                    radius: 30.0,
+                                                    child: Center(
+                                                      child: Text(
+                                                        currentUser.name.substring(0, 1).toUpperCase(),
+                                                        style: const TextStyle(color: Colors.white, fontSize: 20.0),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
