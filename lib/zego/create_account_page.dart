@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../services/firebase_service.dart';
-import 'login_page.dart';
 
 class CreateAccountPage extends StatelessWidget {
   CreateAccountPage({Key? key}) : super(key: key);
@@ -84,7 +83,7 @@ class CreateAccountPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
-                      child: const Text("Login"),
+                      child: const Text("Create Account"),
                     ),
                   ],
                 ),
@@ -126,7 +125,9 @@ class CreateAccountPage extends StatelessWidget {
             ),
           ),
         );
+        return;
       }
+      Navigator.of(context).pop();
     }
   }
 }

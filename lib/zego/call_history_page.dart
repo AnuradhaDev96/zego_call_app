@@ -14,6 +14,7 @@ import '../services/firebase_service.dart';
 class CallHistoryPage extends StatelessWidget {
   const CallHistoryPage({Key? key}) : super(key: key);
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,15 +35,42 @@ class CallHistoryPage extends StatelessWidget {
                   final List<QueryDocumentSnapshot>? documents = snapshot.data?.docs;
 
                   if (documents == null || documents.isEmpty) {
-                    return const Text("No Data");
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.only(top: 10.0),
+                          child: Text(
+                            "Call history is empty",
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
                   }
+
+                  var callHistoryList = documents.reversed
+                      .map((model) => CallHistoryRecord.fromMap(model.data() as Map<String, dynamic>))
+                      .toList();
+
+                  var usersSet = callHistoryList.map((record) => record.callerUsername).toSet().toList(growable: false);
+
+                  Map<String, Color> colorList = {
+                    for (var user in usersSet) user: Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0)
+                  };
 
                   return ListView.builder(
                     shrinkWrap: true,
                     itemCount: documents.length,
                     itemBuilder: (context, index) {
-                      final historyRecord = CallHistoryRecord.fromMap(documents.reversed.toList()[index].data() as Map<String, dynamic>);
-                      return historyRecordCard(historyRecord);
+                      final historyRecord = callHistoryList[index];
+                      return historyRecordCard(
+                          historyRecord,
+                          colorList[historyRecord.callerUsername] ??
+                              Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0));
                     },
                   );
                 },
@@ -102,7 +130,7 @@ class CallHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget historyRecordCard(CallHistoryRecord record) {
+  Widget historyRecordCard(CallHistoryRecord record, Color avatarColor) {
     return Card(
       color: const Color(0xFFF2F8F4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
@@ -120,7 +148,7 @@ class CallHistoryPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundColor: Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+                  backgroundColor: avatarColor,
                   radius: 20.0,
                   child: Center(
                     child: Text(
@@ -129,16 +157,19 @@ class CallHistoryPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 15.0),
-                Text(
-                  record.callerUsername,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.0,
+                Expanded(
+                  child: Text(
+                    record.callerUsername,
+                    textAlign: TextAlign.left,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.0,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                // const Spacer(),
                 actionButton(isVideoCall: false, calleeUsername: record.callerUsername),
                 actionButton(calleeUsername: record.callerUsername),
               ],

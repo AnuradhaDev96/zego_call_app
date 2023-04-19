@@ -3,4 +3,5 @@ class Statics {
   static const int zegoAppId = 1803218513;
   static const String stripePublishableKey = 'pk_test_51MxBryJKjNVqOWzSmGYcqVAkiduiZh6AopEtAnDI5CwNJmQannIA5zTBqj0cs3nL6CF7iWbeaPpaq9CUBkoLDggM00xF8sgaUc';
   static const String stripeSecretKey = 'sk_test_51MxBryJKjNVqOWzSes3KcA9dUcqMvuybpQ0xzIY24W44oUghwRMQVi1beqf6jYeKO4lPCITsy698kHaH3DtRR8hB00Ud1UxxxW';
+  static const String fcmKey = "AAAAeKB_HWU:APA91bH7idg4Qrt8j-dgi8kaIsYYnF6VI6qa2_Hr5cCwvS6jSnzwSBXLqiRSkV1fiUSVtrrgTPb98fQ4O76BT64ib46UGoKOJx9MPItv67kE1qkBdJ2_ZHIezrmh76nngGAJrjfNbJ8S";
 }

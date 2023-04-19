@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  badges: ^3.1.1
   cloud_firestore: ^4.5.0
   firebase_auth: ^4.4.0
   firebase_core: ^2.9.0
@@ -39,6 +40,7 @@ dependencies:
   flutter_stripe: ^7.0.0
   get_it: ^7.2.0
   get: ^4.6.5
+  google_sign_in: ^6.1.0
   awesome_notifications: ^0.7.4+1
   http: ^0.13.5
   intl: ^0.17.0
