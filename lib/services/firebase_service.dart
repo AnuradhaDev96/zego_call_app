@@ -257,14 +257,15 @@ class FirebaseService {
   static Stream<bool> get currentSubscriptionStream => _userSubscriptionController.stream;
 
   static Future<void> setOnlineStatus(OnlineStatus onlineStatus) async {
-    print("Online status based on app: ${onlineStatus.toDisplayString()}");
-    final document = await _store.collection("users").doc(_auth.currentUser!.uid).get();
+    if (_auth.currentUser != null) {
+      final document = await _store.collection("users").doc(_auth.currentUser!.uid).get();
 
-    if (document.exists) {
-      var currentUserModel = await currentUser;
-      if (currentUserModel != null) {
-        currentUserModel.onlineStatus = onlineStatus;
-        await document.reference.update(currentUserModel.toMap());
+      if (document.exists) {
+        var currentUserModel = await currentUser;
+        if (currentUserModel != null) {
+          currentUserModel.onlineStatus = onlineStatus;
+          await document.reference.update(currentUserModel.toMap());
+        }
       }
     }
   }

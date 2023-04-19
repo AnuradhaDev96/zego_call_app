@@ -81,7 +81,7 @@ class LoginPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10.0),
                 ),
               ),
-              child: const Text("Google Sign in"),
+              child: const Text("Sign in with Google"),
             ),
           ],
         ),

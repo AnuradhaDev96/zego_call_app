@@ -30,8 +30,11 @@ class DashboardPage extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
 
-                print("snapshot of doc: ${snapshot.data?.data() as Map<String, dynamic>}");
-                var currentUser = UserModel.fromMap(snapshot.data?.data() as Map<String, dynamic>);
+                if (snapshot.data == null || snapshot.data?.data() == null) {
+                  return const SizedBox.shrink();
+                }
+
+                var currentUser = UserModel.fromMap(snapshot.data!.data() as Map<String, dynamic>);
                 if (currentUser.currentPackage == Subscription.premium) {
                   return const SizedBox.shrink();
                 } else {
@@ -73,7 +76,10 @@ class DashboardPage extends StatelessWidget {
                               return const SizedBox.shrink();
                             }
 
-                            print("snapshot of doc: ${snapshot.data?.data() as Map<String, dynamic>}");
+                            if (snapshot.data == null || snapshot.data?.data() == null) {
+                              return const SizedBox.shrink();
+                            }
+
                             var currentUser = UserModel.fromMap(snapshot.data?.data() as Map<String, dynamic>);
                             Color accountColor =
                                 currentUser.currentPackage == Subscription.premium ? Colors.amber : Colors.white;
@@ -222,17 +228,19 @@ class DashboardPage extends StatelessWidget {
                     var userList =
                         documents.map((model) => UserModel.fromMap(model.data() as Map<String, dynamic>)).toList();
 
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: documents.length,
-                      itemBuilder: (context, index) {
-                        // final model = UserModel.fromMap(documents[index].data() as Map<String, dynamic>);
-                        final model = userList[index];
-                        if (!FirebaseService.isCurrentUser(model.email)) {
-                          return UserCard(userModel: model);
-                        }
-                        return const SizedBox.shrink();
-                      },
+                    return Expanded(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: documents.length,
+                        itemBuilder: (context, index) {
+                          // final model = UserModel.fromMap(documents[index].data() as Map<String, dynamic>);
+                          final model = userList[index];
+                          if (!FirebaseService.isCurrentUser(model.email)) {
+                            return UserCard(userModel: model);
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     );
                   },
                 ),
